@@ -1,0 +1,107 @@
+# IBM Cloud Deployment Configuration
+# This file configures the deployment of the AI Code Review Assistant to IBM Cloud
+
+---
+applications:
+  - name: ai-code-review-assistant
+    memory: 512M
+    instances: 1
+    buildpack: nodejs_buildpack
+    command: npm start
+    
+    # Environment Configuration
+    env:
+      NODE_ENV: production
+      NPM_CONFIG_PRODUCTION: false
+    
+    # Health Check
+    health-check-type: http
+    health-check-http-endpoint: /health
+    timeout: 180
+    
+    # Services to bind (optional)
+    services:
+      - cloudant-db-service
+    
+    # Routes
+    routes:
+      - route: ai-code-review-assistant.mybluemix.net
+    
+    # Resource Limits
+    disk_quota: 1024M
+    
+    # Scaling
+    scaling:
+      min_instances: 1
+      max_instances: 3
+      cpu_threshold: 80
+      memory_threshold: 80
+
+# Optional Services
+services:
+  # Optional: Cloudant for storing analysis results
+  cloudant-db:
+    plan: lite
+    service: cloudantNoSQLDB
+
+# Build Configuration
+build:
+  nodejs_version: 18.x
+  npm_version: 9.x
+
+# Deployment Strategy
+deployment:
+  strategy: rolling
+  max_surge: 1
+  max_unavailable: 0
+
+# Monitoring
+monitoring:
+  enabled: true
+  metrics:
+    - cpu
+    - memory
+    - response_time
+    - error_rate
+
+# Logging
+logging:
+  level: info
+  format: json
+  destination: stdout
+
+# Security
+security:
+  ssl_redirect: true
+  hsts_enabled: true
+  content_security_policy: true
+
+# Auto-scaling Rules
+autoscaling:
+  enabled: true
+  rules:
+    - metric: cpu
+      threshold: 80
+      action: scale_up
+    - metric: cpu
+      threshold: 20
+      action: scale_down
+    - metric: memory
+      threshold: 85
+      action: scale_up
+
+# Backup and Recovery
+backup:
+  enabled: true
+  frequency: daily
+  retention: 7
+
+# CI/CD Integration
+cicd:
+  provider: github_actions
+  auto_deploy: true
+  branches:
+    - main
+    - production
+
+# Made with Bob

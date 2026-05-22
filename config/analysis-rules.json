@@ -1,0 +1,241 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-05-13",
+  "rules": {
+    "security": {
+      "enabled": true,
+      "checks": [
+        {
+          "id": "SEC001",
+          "name": "SQL Injection",
+          "description": "Detects potential SQL injection vulnerabilities",
+          "severity": "critical",
+          "patterns": [
+            "execute\\s*\\(.*\\+.*\\)",
+            "query\\s*\\(.*\\+.*\\)",
+            "raw\\s*\\(.*\\+.*\\)"
+          ],
+          "fileTypes": ["js", "ts", "py", "java", "php"]
+        },
+        {
+          "id": "SEC002",
+          "name": "XSS Vulnerability",
+          "description": "Detects potential Cross-Site Scripting vulnerabilities",
+          "severity": "high",
+          "patterns": [
+            "innerHTML\\s*=",
+            "dangerouslySetInnerHTML",
+            "document\\.write\\s*\\("
+          ],
+          "fileTypes": ["js", "ts", "jsx", "tsx"]
+        },
+        {
+          "id": "SEC003",
+          "name": "Hardcoded Secrets",
+          "description": "Detects hardcoded passwords, API keys, or tokens",
+          "severity": "critical",
+          "patterns": [
+            "password\\s*=\\s*['\"].*['\"]",
+            "api[_-]?key\\s*=\\s*['\"].*['\"]",
+            "secret\\s*=\\s*['\"].*['\"]",
+            "token\\s*=\\s*['\"].*['\"]"
+          ],
+          "fileTypes": ["*"]
+        },
+        {
+          "id": "SEC004",
+          "name": "Insecure Random",
+          "description": "Detects use of insecure random number generators",
+          "severity": "medium",
+          "patterns": [
+            "Math\\.random\\(\\)",
+            "Random\\(\\)"
+          ],
+          "fileTypes": ["js", "ts", "java"]
+        },
+        {
+          "id": "SEC005",
+          "name": "Command Injection",
+          "description": "Detects potential command injection vulnerabilities",
+          "severity": "critical",
+          "patterns": [
+            "exec\\s*\\(.*\\+.*\\)",
+            "system\\s*\\(.*\\+.*\\)",
+            "shell_exec\\s*\\(.*\\+.*\\)"
+          ],
+          "fileTypes": ["js", "ts", "py", "php"]
+        }
+      ]
+    },
+    "quality": {
+      "enabled": true,
+      "checks": [
+        {
+          "id": "QUA001",
+          "name": "Function Complexity",
+          "description": "Detects functions with high cyclomatic complexity",
+          "severity": "medium",
+          "threshold": 10,
+          "metric": "cyclomatic_complexity"
+        },
+        {
+          "id": "QUA002",
+          "name": "Function Length",
+          "description": "Detects excessively long functions",
+          "severity": "low",
+          "threshold": 50,
+          "metric": "lines_of_code"
+        },
+        {
+          "id": "QUA003",
+          "name": "Code Duplication",
+          "description": "Detects duplicated code blocks",
+          "severity": "medium",
+          "threshold": 6,
+          "metric": "duplicate_lines"
+        },
+        {
+          "id": "QUA004",
+          "name": "Missing Documentation",
+          "description": "Detects functions without documentation",
+          "severity": "low",
+          "patterns": [
+            "^\\s*(function|const|let|var)\\s+\\w+\\s*=\\s*(?:async\\s+)?\\([^)]*\\)\\s*=>",
+            "^\\s*function\\s+\\w+\\s*\\([^)]*\\)"
+          ],
+          "fileTypes": ["js", "ts"]
+        },
+        {
+          "id": "QUA005",
+          "name": "Magic Numbers",
+          "description": "Detects magic numbers that should be constants",
+          "severity": "low",
+          "patterns": [
+            "\\b(?!0|1|2|10|100|1000)\\d{2,}\\b"
+          ],
+          "fileTypes": ["*"]
+        }
+      ]
+    },
+    "performance": {
+      "enabled": true,
+      "checks": [
+        {
+          "id": "PERF001",
+          "name": "Inefficient Loop",
+          "description": "Detects inefficient loop patterns",
+          "severity": "medium",
+          "patterns": [
+            "for\\s*\\(.*\\.length.*\\)",
+            "while\\s*\\(.*\\.length.*\\)"
+          ],
+          "fileTypes": ["js", "ts"]
+        },
+        {
+          "id": "PERF002",
+          "name": "Synchronous Operations",
+          "description": "Detects blocking synchronous operations",
+          "severity": "high",
+          "patterns": [
+            "readFileSync",
+            "writeFileSync",
+            "execSync"
+          ],
+          "fileTypes": ["js", "ts"]
+        },
+        {
+          "id": "PERF003",
+          "name": "Memory Leak Risk",
+          "description": "Detects potential memory leak patterns",
+          "severity": "high",
+          "patterns": [
+            "setInterval\\s*\\(",
+            "addEventListener\\s*\\([^)]*\\)(?!.*removeEventListener)"
+          ],
+          "fileTypes": ["js", "ts"]
+        },
+        {
+          "id": "PERF004",
+          "name": "Inefficient String Concatenation",
+          "description": "Detects inefficient string concatenation in loops",
+          "severity": "low",
+          "patterns": [
+            "for\\s*\\([^)]*\\)\\s*\\{[^}]*\\+=\\s*['\"]"
+          ],
+          "fileTypes": ["js", "ts", "java"]
+        }
+      ]
+    },
+    "bestPractices": {
+      "enabled": true,
+      "checks": [
+        {
+          "id": "BP001",
+          "name": "Console Statements",
+          "description": "Detects console.log statements in production code",
+          "severity": "low",
+          "patterns": [
+            "console\\.(log|debug|info|warn|error)"
+          ],
+          "fileTypes": ["js", "ts"]
+        },
+        {
+          "id": "BP002",
+          "name": "TODO Comments",
+          "description": "Detects TODO comments that should be addressed",
+          "severity": "low",
+          "patterns": [
+            "//\\s*TODO",
+            "//\\s*FIXME",
+            "//\\s*HACK"
+          ],
+          "fileTypes": ["*"]
+        },
+        {
+          "id": "BP003",
+          "name": "Error Handling",
+          "description": "Detects missing error handling",
+          "severity": "medium",
+          "patterns": [
+            "catch\\s*\\([^)]*\\)\\s*\\{\\s*\\}"
+          ],
+          "fileTypes": ["js", "ts", "java", "py"]
+        },
+        {
+          "id": "BP004",
+          "name": "Deprecated APIs",
+          "description": "Detects usage of deprecated APIs",
+          "severity": "medium",
+          "patterns": [
+            "var\\s+",
+            "\\.substr\\(",
+            "new Buffer\\("
+          ],
+          "fileTypes": ["js", "ts"]
+        }
+      ]
+    }
+  },
+  "exclusions": {
+    "paths": [
+      "node_modules/**",
+      "dist/**",
+      "build/**",
+      "coverage/**",
+      "*.min.js",
+      "*.bundle.js"
+    ],
+    "fileTypes": [
+      "json",
+      "md",
+      "txt",
+      "lock"
+    ]
+  },
+  "aiEnhancement": {
+    "enabled": true,
+    "contextAnalysis": true,
+    "suggestFixes": true,
+    "explainIssues": true
+  }
+}

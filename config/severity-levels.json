@@ -1,0 +1,145 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-05-13",
+  "severityLevels": {
+    "critical": {
+      "level": 1,
+      "name": "Critical",
+      "description": "Issues that must be fixed immediately - security vulnerabilities or breaking bugs",
+      "color": "#d73a4a",
+      "icon": "🔴",
+      "actionRequired": true,
+      "blockMerge": true,
+      "notifyOwners": true,
+      "examples": [
+        "SQL injection vulnerabilities",
+        "Hardcoded secrets and credentials",
+        "Command injection risks",
+        "Authentication bypass"
+      ]
+    },
+    "high": {
+      "level": 2,
+      "name": "High",
+      "description": "Serious issues that should be addressed before merging",
+      "color": "#e99695",
+      "icon": "🟠",
+      "actionRequired": true,
+      "blockMerge": false,
+      "notifyOwners": true,
+      "examples": [
+        "XSS vulnerabilities",
+        "Memory leak risks",
+        "Blocking synchronous operations",
+        "Missing critical error handling"
+      ]
+    },
+    "medium": {
+      "level": 3,
+      "name": "Medium",
+      "description": "Issues that should be fixed but don't block the merge",
+      "color": "#fbca04",
+      "icon": "🟡",
+      "actionRequired": false,
+      "blockMerge": false,
+      "notifyOwners": false,
+      "examples": [
+        "Code complexity issues",
+        "Inefficient algorithms",
+        "Deprecated API usage",
+        "Code duplication"
+      ]
+    },
+    "low": {
+      "level": 4,
+      "name": "Low",
+      "description": "Minor issues and suggestions for improvement",
+      "color": "#0e8a16",
+      "icon": "🟢",
+      "actionRequired": false,
+      "blockMerge": false,
+      "notifyOwners": false,
+      "examples": [
+        "Console.log statements",
+        "TODO comments",
+        "Missing documentation",
+        "Code style inconsistencies"
+      ]
+    },
+    "info": {
+      "level": 5,
+      "name": "Info",
+      "description": "Informational messages and best practice suggestions",
+      "color": "#0075ca",
+      "icon": "ℹ️",
+      "actionRequired": false,
+      "blockMerge": false,
+      "notifyOwners": false,
+      "examples": [
+        "Code improvement suggestions",
+        "Performance optimization tips",
+        "Alternative approaches",
+        "Best practice recommendations"
+      ]
+    }
+  },
+  "thresholds": {
+    "critical": {
+      "maxAllowed": 0,
+      "failBuild": true
+    },
+    "high": {
+      "maxAllowed": 3,
+      "failBuild": false
+    },
+    "medium": {
+      "maxAllowed": 10,
+      "failBuild": false
+    },
+    "low": {
+      "maxAllowed": 20,
+      "failBuild": false
+    },
+    "info": {
+      "maxAllowed": -1,
+      "failBuild": false
+    }
+  },
+  "scoring": {
+    "critical": -100,
+    "high": -50,
+    "medium": -20,
+    "low": -5,
+    "info": 0,
+    "passingScore": -150
+  },
+  "notifications": {
+    "critical": {
+      "channels": ["github", "email", "slack"],
+      "template": "critical-issue"
+    },
+    "high": {
+      "channels": ["github", "email"],
+      "template": "high-priority-issue"
+    },
+    "medium": {
+      "channels": ["github"],
+      "template": "standard-issue"
+    },
+    "low": {
+      "channels": ["github"],
+      "template": "standard-issue"
+    },
+    "info": {
+      "channels": ["github"],
+      "template": "info-message"
+    }
+  },
+  "labels": {
+    "critical": ["security", "critical", "urgent"],
+    "high": ["bug", "high-priority"],
+    "medium": ["enhancement", "code-quality"],
+    "low": ["minor", "style"],
+    "info": ["suggestion", "documentation"]
+  }
+}
