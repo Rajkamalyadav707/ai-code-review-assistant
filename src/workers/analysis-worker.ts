@@ -107,6 +107,10 @@ export class AnalysisWorker {
 
     jobLogger.info('Analyzing files', { fileCount: files.length });
 
+    // Check if AI review is enabled
+    const useAIReview = icaClient.isEnabled() && process.env.ENABLE_AI_REVIEW !== 'false';
+    const usePatternAnalyzers = process.env.USE_PATTERN_ANALYZERS !== 'false';
+
     // Analyze each file
     for (const file of files) {
       try {
@@ -124,36 +128,58 @@ export class AnalysisWorker {
         const language = this.detectLanguage(file.filename);
         totalLinesAnalyzed += code.split('\n').length;
 
-        // Run analyzers based on configuration
-        const enableSecurity = process.env.ENABLE_SECURITY_SCAN !== 'false';
-        const enableQuality = process.env.ENABLE_QUALITY_SCAN !== 'false';
-        const enablePerformance = process.env.ENABLE_PERFORMANCE_SCAN !== 'false';
-
-        // Security analysis
-        if (enableSecurity) {
-          const securityResult = await this.securityAnalyzer.analyze(
-            code,
-            file.filename
-          );
-          allFindings.push(...this.convertToFindings(securityResult.vulnerabilities, 'security'));
+        // PRIMARY: AI-Powered Code Review (if enabled)
+        if (useAIReview) {
+          jobLogger.info('Running AI-powered code review', { filename: file.filename });
+          try {
+            const aiFindings = await icaClient.reviewCode(code, file.filename, language);
+            if (aiFindings.length > 0) {
+              jobLogger.info('AI review found issues', {
+                filename: file.filename,
+                count: aiFindings.length
+              });
+              allFindings.push(...aiFindings);
+            }
+          } catch (error) {
+            jobLogger.warn('AI review failed, falling back to pattern analyzers', {
+              filename: file.filename,
+              error: error instanceof Error ? error.message : 'Unknown error',
+            });
+          }
         }
 
-        // Quality analysis
-        if (enableQuality) {
-          const qualityResult = await this.qualityAnalyzer.analyze(
-            code,
-            file.filename
-          );
-          allFindings.push(...this.convertToFindings(qualityResult.issues, 'quality'));
-        }
+        // SECONDARY: Pattern-Based Analyzers (as backup or supplement)
+        if (usePatternAnalyzers) {
+          const enableSecurity = process.env.ENABLE_SECURITY_SCAN !== 'false';
+          const enableQuality = process.env.ENABLE_QUALITY_SCAN !== 'false';
+          const enablePerformance = process.env.ENABLE_PERFORMANCE_SCAN !== 'false';
 
-        // Performance analysis
-        if (enablePerformance) {
-          const performanceResult = await this.performanceAnalyzer.analyze(
-            code,
-            file.filename
-          );
-          allFindings.push(...this.convertToFindings(performanceResult.issues, 'performance'));
+          // Security analysis
+          if (enableSecurity) {
+            const securityResult = await this.securityAnalyzer.analyze(
+              code,
+              file.filename
+            );
+            allFindings.push(...this.convertToFindings(securityResult.vulnerabilities, 'security'));
+          }
+
+          // Quality analysis
+          if (enableQuality) {
+            const qualityResult = await this.qualityAnalyzer.analyze(
+              code,
+              file.filename
+            );
+            allFindings.push(...this.convertToFindings(qualityResult.issues, 'quality'));
+          }
+
+          // Performance analysis
+          if (enablePerformance) {
+            const performanceResult = await this.performanceAnalyzer.analyze(
+              code,
+              file.filename
+            );
+            allFindings.push(...this.convertToFindings(performanceResult.issues, 'performance'));
+          }
         }
 
         jobLogger.debug('File analysis complete', {
@@ -186,8 +212,8 @@ export class AnalysisWorker {
 
     jobLogger.info('Analysis complete', summary);
 
-    // Enhance findings with ICA AI (if enabled)
-    if (icaClient.isEnabled() && allFindings.length > 0) {
+    // Enhance critical findings with detailed AI explanations (if not already AI-reviewed)
+    if (icaClient.isEnabled() && !useAIReview && allFindings.length > 0) {
       jobLogger.info('Enhancing findings with IBM ICA AI');
       try {
         await this.enhanceFindingsWithAI(allFindings, prData, jobLogger);

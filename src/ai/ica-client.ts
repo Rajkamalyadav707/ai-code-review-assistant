@@ -101,6 +101,132 @@ Provide a concise analysis.`;
   }
 
   /**
+   * Comprehensive AI-powered code review
+   * This is the primary review method that actively analyzes code quality
+   */
+  async reviewCode(
+    code: string,
+    filename: string,
+    language: string
+  ): Promise<Finding[]> {
+    if (!this.isEnabled()) {
+      logger.debug('AI code review skipped - service not enabled');
+      return [];
+    }
+
+    try {
+      const prompt = `You are an expert code reviewer. Perform a comprehensive code review of the following ${language} code from file "${filename}".
+
+\`\`\`${language}
+${code}
+\`\`\`
+
+Analyze the code for:
+1. **Security vulnerabilities** (SQL injection, XSS, authentication issues, etc.)
+2. **Code quality issues** (code smells, complexity, maintainability)
+3. **Performance problems** (inefficient algorithms, memory leaks, unnecessary operations)
+4. **Best practice violations** (naming conventions, error handling, design patterns)
+5. **Bugs and logic errors**
+6. **Potential improvements**
+
+For each issue found, provide:
+- SEVERITY: critical/high/medium/low/info
+- TYPE: security/quality/performance/best-practice
+- LINE: line number where issue occurs
+- TITLE: brief title (max 60 chars)
+- DESCRIPTION: detailed explanation
+- SUGGESTION: how to fix it
+
+Format each issue as:
+---ISSUE---
+SEVERITY: [level]
+TYPE: [type]
+LINE: [number]
+TITLE: [title]
+DESCRIPTION: [description]
+SUGGESTION: [fix suggestion]
+---END---
+
+Be thorough but focus on actionable issues. If code is excellent, say "NO ISSUES FOUND".`;
+
+      const response = await this.client!.chat.completions.create({
+        model: this.model,
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 2000,
+        temperature: 0.3,
+      });
+
+      const content = response.choices[0]?.message?.content || '';
+      
+      // Parse AI response into findings
+      return this.parseAIReviewResponse(content, filename);
+    } catch (error: any) {
+      logger.error('AI code review failed', {
+        error: error.message,
+        code: error.code,
+        filename,
+      });
+      return [];
+    }
+  }
+
+  /**
+   * Parse AI review response into Finding objects
+   */
+  private parseAIReviewResponse(content: string, filename: string): Finding[] {
+    const findings: Finding[] = [];
+    
+    // Check if no issues found
+    if (content.includes('NO ISSUES FOUND') || content.includes('no issues found')) {
+      logger.info('AI review found no issues', { filename });
+      return findings;
+    }
+
+    // Split by issue markers
+    const issueBlocks = content.split('---ISSUE---').filter(block => block.trim());
+    
+    for (const block of issueBlocks) {
+      try {
+        // Extract issue details
+        const severityMatch = block.match(/SEVERITY:\s*(critical|high|medium|low|info)/i);
+        const typeMatch = block.match(/TYPE:\s*(security|quality|performance|best-practice)/i);
+        const lineMatch = block.match(/LINE:\s*(\d+)/i);
+        const titleMatch = block.match(/TITLE:\s*([^\n]+)/i);
+        const descMatch = block.match(/DESCRIPTION:\s*([^\n]+(?:\n(?!SUGGESTION:)[^\n]+)*)/i);
+        const suggestionMatch = block.match(/SUGGESTION:\s*([^\n]+(?:\n(?!---END---)[^\n]+)*)/i);
+
+        if (severityMatch?.[1] && typeMatch?.[1] && titleMatch?.[1]) {
+          const finding: Finding = {
+            id: this.generateFindingId(),
+            type: typeMatch[1].toLowerCase() as Finding['type'],
+            severity: severityMatch[1].toLowerCase() as Severity,
+            title: titleMatch[1].trim(),
+            description: descMatch?.[1] ? descMatch[1].trim() : titleMatch[1].trim(),
+            file: filename,
+            line: lineMatch?.[1] ? parseInt(lineMatch[1]) : undefined,
+            suggestion: suggestionMatch?.[1] ? suggestionMatch[1].trim() : undefined,
+            ruleId: 'ai-review',
+          };
+
+          findings.push(finding);
+        }
+      } catch (error) {
+        logger.warn('Failed to parse AI review issue', { error, block: block.substring(0, 100) });
+      }
+    }
+
+    logger.info('AI review completed', { filename, issuesFound: findings.length });
+    return findings;
+  }
+
+  /**
+   * Generate unique finding ID
+   */
+  private generateFindingId(): string {
+    return `ai-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+  }
+
+  /**
    * Get AI-powered suggestions for code improvements
    */
   async getSuggestions(
