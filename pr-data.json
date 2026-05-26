@@ -1,0 +1,6 @@
+{
+  "title": "Test: Dummy code with intentional issues",
+  "head": "test-dummy-code-issues",
+  "base": "main",
+  "body": "## 🧪 Test Pull Request for AI Code Review Assistant\n\nThis PR contains dummy code with **multiple intentional issues** for testing the AI code review assistant.\n\n### 🔴 Security Issues:\n- ❌ Hardcoded credentials (API keys, passwords, tokens)\n- ❌ SQL injection vulnerability in getUserByUsername()\n- ❌ Weak cryptography (MD5 hashing)\n- ❌ eval() usage - arbitrary code execution risk\n- ❌ Console.log with sensitive data exposure\n\n### ⚡ Performance Issues:\n- ❌ O(n²) algorithm complexity in findDuplicates()\n- ❌ Synchronous file operations blocking event loop\n- ❌ Inefficient string concatenation in loops\n- ❌ Memory leaks (unremoved event listeners)\n\n### 📝 Code Quality Issues:\n- ❌ No error handling in async operations\n- ❌ No input validation\n- ❌ Global mutable state\n- ❌ Unused variables\n- ❌ TypeScript type errors\n\n### 📁 File Changed:\n- src/test-dummy-code.ts (120 lines)\n\n---\n\n**⚠️ This is for testing purposes only. Do not merge this PR.**\n\nThe AI code review assistant should detect and report all these issues automatically."
+}
